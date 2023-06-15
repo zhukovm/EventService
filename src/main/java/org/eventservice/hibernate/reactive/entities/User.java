@@ -13,6 +13,7 @@ import java.util.List;
 @Entity
 @Table(name = "users")
 @NamedQuery(name = "Users.findAll", query = "SELECT u FROM User u LEFT JOIN FETCH u.role LEFT JOIN FETCH u.groupes")
+@NamedQuery(name = "Users.findByNames", query = "SELECT u FROM User u LEFT JOIN FETCH u.role LEFT JOIN FETCH u.groupes where u.firstName=:firstName and u.lastName=:lastName")
 @Data
 @Builder
 @NoArgsConstructor

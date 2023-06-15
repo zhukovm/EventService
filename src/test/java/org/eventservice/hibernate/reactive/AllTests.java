@@ -2,6 +2,7 @@ package org.eventservice.hibernate.reactive;
 
 import io.quarkus.mailer.MockMailbox;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import jakarta.inject.Inject;
 import org.eventservice.hibernate.reactive.common.DateUtils;
@@ -42,9 +43,16 @@ public class AllTests {
     public static String userUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf710";
     public static String administratorRoleUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf708";
 
+    public String adminUserToken = "";
+
     @Test
     public void performTests() throws Exception {
+        getAdminUserToken();
+
         createUser();
+
+        getActiveUser();
+
         listAllUsers();
 
         createEvent();
@@ -59,8 +67,25 @@ public class AllTests {
 
         checkSenderServiceWork();
 
-         checkIncomingMails();
+        checkIncomingMails();
         //checkNotificationsAfterEventModification();
+    }
+
+    private void getAdminUserToken() {
+        Response response = given()
+                .when()
+                .contentType(ContentType.URLENC)
+                .param("password",1)
+                .param("username","eksi")
+                .param("grant_type","password")
+                .param("client_id","event-service-ui")
+                .post("http://localhost:8080/realms/master/protocol/openid-connect/token")
+                .then()
+                .statusCode(200)
+                .contentType("application/json")
+                .extract().response();
+
+        adminUserToken = response.jsonPath().getString("access_token");
     }
 
     private void checkIncomingMails() throws Exception {
@@ -83,7 +108,17 @@ public class AllTests {
         assertThat(response.jsonPath().getList("firstName")).contains("Mikhail");
         assertThat(response.jsonPath().getList("role.name")).contains("Administrator");
     }
+    public void getActiveUser() throws ParseException {
+        Response response = given()
+                .when()
+                .header("authorization", "Bearer " + adminUserToken)
+                .get("/users/activeUser")
+                .then()
+                .statusCode(200)
+                .extract().response();
 
+        Assertions.assertNotNull(response.jsonPath().get("id"));
+    }
     public void createUser() throws ParseException {
         /*SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));*/
@@ -92,7 +127,7 @@ public class AllTests {
         role.setId(administratorRoleUuid);
 
         User user = User.builder().build();
-        user.setFirstName("Katya");
+        user.setFirstName("Ekaterina");
         user.setLastName("Sidorenkova");
         user.setPatronymic("Sidorovna");
         user.setEmail("k@fifa.com");
@@ -103,6 +138,7 @@ public class AllTests {
 
         Response response = given()
                 .when()
+                .header("authorization", "Bearer " + adminUserToken)
                 .body(user)
                 .contentType("application/json")
                 .post("/users")
