@@ -13,8 +13,6 @@ import jakarta.persistence.*;
 @AllArgsConstructor
 public class Subscription {
     @Id
-    //@SequenceGenerator(name = "subscriptionsSequence", sequenceName = "subscriptions_id_seq", allocationSize = 1, initialValue = 1)
-   // @GeneratedValue(generator = "subscriptionsSequence")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 

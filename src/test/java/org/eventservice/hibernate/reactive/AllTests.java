@@ -6,10 +6,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import jakarta.inject.Inject;
 import org.eventservice.hibernate.reactive.common.DateUtils;
-import org.eventservice.hibernate.reactive.entities.Event;
-import org.eventservice.hibernate.reactive.entities.Role;
-import org.eventservice.hibernate.reactive.entities.Subscription;
-import org.eventservice.hibernate.reactive.entities.User;
+import org.eventservice.hibernate.reactive.entities.*;
 import org.eventservice.hibernate.reactive.service.EventsService;
 import org.eventservice.hibernate.reactive.service.MailCheckerService;
 import org.eventservice.hibernate.reactive.service.SenderService;
@@ -18,7 +15,6 @@ import org.junit.jupiter.api.Test;
 
 import java.sql.Date;
 import java.text.ParseException;
-import java.util.UUID;
 
 import static io.restassured.RestAssured.given;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -40,8 +36,9 @@ public class AllTests {
     MailCheckerService mailCheckerService;
 
     public static String eventUUID1;
+    public static String groupUUID1;
     public static String userUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf710";
-    public static String administratorRoleUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf708";
+    //public static String administratorRoleUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf708";
 
     public String adminUserToken = "";
 
@@ -54,6 +51,8 @@ public class AllTests {
         getActiveUser();
 
         listAllUsers();
+
+        createGroup();
 
         createEvent();
         listAllEvents();
@@ -71,14 +70,43 @@ public class AllTests {
         //checkNotificationsAfterEventModification();
     }
 
+    private void createGroup() {
+        Group g = Group.builder()
+                .name("English lovers")
+                .shortDescription("We love to learn English!!!")
+                .description("Welcome to EnglishClub, a free website to help you learn (and teach) English. It's your club, where you can:\n" +
+                        "\n" +
+                        "make your own English page with blogs, photos, videos, music, groups and friends\n" +
+                        "test your level in English and get help with English grammar\n" +
+                        "study English grammar, vocabulary and pronunciation\n" +
+                        "play English games and do English quizzes online\n" +
+                        "chat in English with other students and teachers\n" +
+                        "find schools where you can learn English at home or abroad\n" +
+                        "EnglishClub is divided into various main sections that you can navigate easily.")
+                .build();
+
+        Response response = given()
+                .when()
+                .header("authorization", "Bearer " + adminUserToken)
+                .body(g)
+                .contentType("application/json")
+                .post("/groupes")
+                .then()
+                .statusCode(201)
+                .extract().response();
+
+        groupUUID1 = response.jsonPath().get("id");
+        Assertions.assertNotNull(groupUUID1);
+    }
+
     private void getAdminUserToken() {
         Response response = given()
                 .when()
                 .contentType(ContentType.URLENC)
-                .param("password",1)
-                .param("username","eksi")
-                .param("grant_type","password")
-                .param("client_id","event-service-ui")
+                .param("password", 1)
+                .param("username", "eksi")
+                .param("grant_type", "password")
+                .param("client_id", "event-service-ui")
                 .post("http://localhost:8080/realms/master/protocol/openid-connect/token")
                 .then()
                 .statusCode(200)
@@ -106,8 +134,8 @@ public class AllTests {
                 .contentType("application/json")
                 .extract().response();
         assertThat(response.jsonPath().getList("firstName")).contains("Mikhail");
-        assertThat(response.jsonPath().getList("role.name")).contains("Administrator");
     }
+
     public void getActiveUser() throws ParseException {
         Response response = given()
                 .when()
@@ -119,12 +147,10 @@ public class AllTests {
 
         Assertions.assertNotNull(response.jsonPath().get("id"));
     }
-    public void createUser() throws ParseException {
-        /*SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));*/
 
-        Role role = new Role();
-        role.setId(administratorRoleUuid);
+    public void createUser() throws ParseException {
+/*        Role role = new Role();
+        role.setId(administratorRoleUuid);*/
 
         User user = User.builder().build();
         user.setFirstName("Ekaterina");
@@ -132,9 +158,10 @@ public class AllTests {
         user.setPatronymic("Sidorovna");
         user.setEmail("k@fifa.com");
         user.setBirthDate(DateUtils.getDateFormat().parse(getBirthDate()));
-        user.setPassword("p");
+        //user.setPassword("p");
         user.setPhone("1111111111");
-        user.setRole(role);
+        //user.setRole(role);
+        user.setPreferredUserName("eksi");
 
         Response response = given()
                 .when()
@@ -157,8 +184,8 @@ public class AllTests {
     public void createEvent() throws ParseException {
         java.util.Date plannedDateTime = DateUtils.getDateTimeFormat().parse(plannedDateTimeAsText);
 
-        Event e1 = buildEvent(1, plannedDateTime);
-        Event e2 = buildEvent(2, plannedDateTime);
+        Event e1 = buildEvent(1, groupUUID1, plannedDateTime);
+        Event e2 = buildEvent(2, groupUUID1, plannedDateTime);
 
 
         eventUUID1 = createEvent(e1);
@@ -190,7 +217,7 @@ public class AllTests {
                 .extract().response();
 
         assertThat(response.jsonPath().get("name").equals("Test event 1"));
-        // cause of JsonIgnore assertThat(response.jsonPath().getList("subscriptions.id")).containsExactlyInAnyOrder("1");
+//        assertThat(response.jsonPath().getList("subscriptions")).isNotEmpty();
 
         return response.as(Event.class);
     }
@@ -206,11 +233,13 @@ public class AllTests {
                 .extract().response();
 
         Assertions.assertNotNull(response.jsonPath().get("id"));
+        Assertions.assertNotNull(response.jsonPath().get("group.id"));
+        Assertions.assertEquals(false, Boolean.valueOf(response.jsonPath().get("isConfirmedByAdministrator")));
 
         return response.jsonPath().get("id");
     }
 
-    private static Event buildEvent(int id, java.util.Date plannedDateTime) {
+    private static Event buildEvent(int id, String groupId, java.util.Date plannedDateTime) {
         Event e = new Event();
         e.setCreatedAt(new Date(System.currentTimeMillis()));
         e.setPlannedDateTime(plannedDateTime);
@@ -219,6 +248,9 @@ public class AllTests {
         e.setDescription("Test descr " + id);
         e.setShortDescription("Test short descr " + id);
         e.setStatus("Created");
+        e.setGroup(Group.builder()
+                .id(groupId)
+                .build());
         return e;
     }
 

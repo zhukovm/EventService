@@ -25,25 +25,17 @@ public class UsersApi {
     Mutiny.SessionFactory sf;
 
     @Inject
-    UserInfo userInfo;
-
-    @Inject
     JsonWebToken jwt;
 
     @GET
     @Path("activeUser")
     public Uni<User> getActiveUser() {
-
-        String givenName = jwt.getClaim("given_name");
-        String familyName = jwt.getClaim("family_name");
-
+        String preferredUserName = jwt.getClaim("preferred_username");
 
         return sf.withSession(s ->
-                        s.createNamedQuery("Users.findByNames", User.class)
-                                .setParameter("firstName", givenName)
-                                .setParameter("lastName", familyName)
+                        s.createNamedQuery("Users.findByPreferredUserName", User.class)
+                                .setParameter("preferredUserName", preferredUserName)
                                 .getSingleResultOrNull()
-                //s.createNamedQuery("Users.findAll", User.class)
         );
     }
 

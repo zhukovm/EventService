@@ -12,8 +12,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "users")
-@NamedQuery(name = "Users.findAll", query = "SELECT u FROM User u LEFT JOIN FETCH u.role LEFT JOIN FETCH u.groupes")
-@NamedQuery(name = "Users.findByNames", query = "SELECT u FROM User u LEFT JOIN FETCH u.role LEFT JOIN FETCH u.groupes where u.firstName=:firstName and u.lastName=:lastName")
+@NamedQuery(name = "Users.findAll", query = "SELECT u FROM User u LEFT JOIN FETCH u.groupes")
+@NamedQuery(name = "Users.findByNames", query = "SELECT u FROM User u LEFT JOIN FETCH u.groupes where u.firstName=:firstName and u.lastName=:lastName")
+@NamedQuery(name = "Users.findByPreferredUserName", query = "SELECT u FROM User u LEFT JOIN FETCH u.groupes where u.preferredUserName=:preferredUserName")
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,16 +26,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @ManyToOne(optional = false)
+/*    @ManyToOne(optional = false)
     //@JoinColumn(name = "ROLE_ID")
-    private Role role;
+    private Role role;*/
 
+    @Column(length = 50, nullable = false)
+    private String preferredUserName;
     @Column(length = 50, nullable = false)
     private String firstName;
-
     @Column(length = 50, nullable = false)
     private String lastName;
-
     @Column(length = 50)
     private String patronymic;
     @Column(length = 11, nullable = false)
@@ -45,8 +46,8 @@ public class User {
     @JsonFormat(pattern = "dd/MM/yyyy")
     private Date birthDate;
 
-    @Column(length = 50, nullable = false)
-    private String password;
+/*    @Column(length = 50, nullable = false)
+    private String password;*/
 
     @Column(length = 50, nullable = false)
     private String email;

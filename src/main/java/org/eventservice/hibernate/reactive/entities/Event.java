@@ -8,21 +8,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Table(name = "events")
-@NamedQuery(name = "Events.findAll", query = "SELECT e FROM Event e LEFT JOIN FETCH e.subscriptions LEFT JOIN FETCH e.registrations LEFT JOIN FETCH e.comments LEFT JOIN FETCH e.group")
+@NamedQuery(name = "Events.findAll", query = "SELECT e FROM Event e LEFT JOIN FETCH e.group"/* LEFT JOIN FETCH e.subscriptions LEFT JOIN FETCH e.registrations LEFT JOIN FETCH e.comments"*/)
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Event {
     @Id
-    //@SequenceGenerator(name = "eventsSequence", sequenceName = "events_id_seq", allocationSize = 1, initialValue = 1)
-    //@GeneratedValue(generator = "eventsSequence")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     @ManyToOne(optional = false)
@@ -46,16 +46,19 @@ public class Event {
     @OneToMany(mappedBy = "event", fetch = FetchType.EAGER)
     @JsonIgnore
     @ToString.Exclude
+    @Fetch(value = FetchMode.SUBSELECT)
     private List<Subscription> subscriptions = new ArrayList<>();
 
     @OneToMany(mappedBy = "event", fetch = FetchType.EAGER)
     @JsonIgnore
     @ToString.Exclude
+    @Fetch(value = FetchMode.SUBSELECT)
     private List<Registration> registrations = new ArrayList<>();
 
     @OneToMany(mappedBy = "event", fetch = FetchType.EAGER)
     @JsonIgnore
     @ToString.Exclude
+    @Fetch(value = FetchMode.SUBSELECT)
     private List<Comment> comments = new ArrayList<>();
 
     @ManyToOne(optional = false)
@@ -64,4 +67,7 @@ public class Event {
     @Lob
     //@Column(columnDefinition="BLOB")
     private byte[] image;
+
+    @Column
+    private Boolean isConfirmedByAdministrator;
 }
