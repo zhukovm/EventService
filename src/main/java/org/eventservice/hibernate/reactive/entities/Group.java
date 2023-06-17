@@ -1,6 +1,5 @@
 package org.eventservice.hibernate.reactive.entities;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,6 +24,8 @@ public class Group {
     private String shortDescription;
     @Column(length = 5000, nullable = false)
     private String description;
+    @ManyToOne(optional = false)
+    GroupType groupType;
     @ManyToMany(mappedBy = "groupes", fetch = FetchType.EAGER)
     @JsonIgnore
     @ToString.Exclude

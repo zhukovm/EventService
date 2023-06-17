@@ -3,11 +3,8 @@ package org.eventservice.hibernate.reactive.entities;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
+import org.eventservice.hibernate.reactive.enums.EventStatus;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
@@ -34,7 +31,7 @@ public class Event {
     @Column(length = 5000, nullable = false)
     private String description;
     @Column(length = 50, nullable = false)
-    private String status;
+    private EventStatus status;
     @Column
     @JsonFormat(pattern = "dd/MM/yyyy")
     @Temporal(TemporalType.DATE)

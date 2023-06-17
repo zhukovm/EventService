@@ -1,8 +1,10 @@
 package org.eventservice.hibernate.reactive.entities;
 
-import lombok.*;
-
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "subscriptions")
@@ -19,6 +21,14 @@ public class Subscription {
     @ManyToOne(optional = false)
     private User user;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    //todo make check that event | group | groupType should exist
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Event event;
+
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private Group group;
+
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private GroupType groupType;
+
 }

@@ -7,6 +7,7 @@ import io.restassured.response.Response;
 import jakarta.inject.Inject;
 import org.eventservice.hibernate.reactive.common.DateUtils;
 import org.eventservice.hibernate.reactive.entities.*;
+import org.eventservice.hibernate.reactive.enums.EventStatus;
 import org.eventservice.hibernate.reactive.service.EventsService;
 import org.eventservice.hibernate.reactive.service.MailCheckerService;
 import org.eventservice.hibernate.reactive.service.SenderService;
@@ -37,6 +38,7 @@ public class AllTests {
 
     public static String eventUUID1;
     public static String groupUUID1;
+    public static String groupTypeUUID1;
     public static String userUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf710";
     //public static String administratorRoleUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf708";
 
@@ -52,6 +54,7 @@ public class AllTests {
 
         listAllUsers();
 
+        createGroupType();
         createGroup();
 
         createEvent();
@@ -60,6 +63,9 @@ public class AllTests {
         createSubscription();
         listAllSubscriptions();
 
+        createRegistration();
+        listAllRegistrations();
+
         getEvent();
 
         modifyEvent();
@@ -67,11 +73,74 @@ public class AllTests {
         checkSenderServiceWork();
 
         checkIncomingMails();
+
+        //todo 1. проверка готовности 2. комменты 3. Корректные нотификации
+
         //checkNotificationsAfterEventModification();
+    }
+
+    private void createRegistration() {
+        Event event = new Event();
+
+        event.setId(eventUUID1);
+
+        Registration r = Registration.builder()
+                .event(event)
+                .user(User.builder().id(userUuid).build())
+                .build();
+
+
+        Response response = given()
+                .when()
+                .body(r)
+                .contentType("application/json")
+                .post("/registrations")
+                .then()
+                .statusCode(201)
+                .extract().response();
+
+        Assertions.assertNotNull(response.jsonPath().get("id"));
+
+    }
+
+    private void listAllRegistrations() {
+        Response response = given()
+                .when()
+                .get("/registrations")
+                .then()
+                .statusCode(200)
+                .contentType("application/json")
+                .extract().response();
+
+        System.out.println(response.asString());
+
+        Assertions.assertEquals(1, response.jsonPath().getList("id").size());
+        assertThat(response.jsonPath().getList("user.firstName")).containsExactlyInAnyOrder("Mikhail");
+        assertThat(response.jsonPath().getList("event.name")).containsExactlyInAnyOrder("Test event 1");
+    }
+
+    private void createGroupType() {
+        GroupType gt = GroupType.builder()
+                .name("Learning")
+                .build();
+
+        Response response = given()
+                .when()
+                .header("authorization", "Bearer " + adminUserToken)
+                .body(gt)
+                .contentType("application/json")
+                .post("/grouptype")
+                .then()
+                .statusCode(201)
+                .extract().response();
+
+        groupTypeUUID1 = response.jsonPath().get("id");
+        Assertions.assertNotNull(groupTypeUUID1);
     }
 
     private void createGroup() {
         Group g = Group.builder()
+                .groupType(GroupType.builder().id(groupTypeUUID1).build())
                 .name("English lovers")
                 .shortDescription("We love to learn English!!!")
                 .description("Welcome to EnglishClub, a free website to help you learn (and teach) English. It's your club, where you can:\n" +
@@ -247,7 +316,7 @@ public class AllTests {
         e.setName("Test event " + id);
         e.setDescription("Test descr " + id);
         e.setShortDescription("Test short descr " + id);
-        e.setStatus("Created");
+        e.setStatus(EventStatus.OPEN);
         e.setGroup(Group.builder()
                 .id(groupId)
                 .build());
