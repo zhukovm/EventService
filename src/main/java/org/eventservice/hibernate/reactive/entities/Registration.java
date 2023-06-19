@@ -19,7 +19,7 @@ public class Registration {
     private String id;
     @ManyToOne(optional = false)
     private User user;
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
     private Event event;
     @Column
     private boolean isConfirmed;

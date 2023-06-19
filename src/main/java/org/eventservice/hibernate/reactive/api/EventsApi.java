@@ -6,8 +6,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import org.eventservice.hibernate.reactive.entities.Event;
+import org.eventservice.hibernate.reactive.entities.UUIDContainer;
 import org.eventservice.hibernate.reactive.service.EventsService;
-
 
 import java.util.List;
 
@@ -27,6 +27,15 @@ public class EventsApi {
     @Inject
     EventsService eventsService;
 
+
+    @POST
+    @Path("registrationCheck")
+    public Uni<Response> registrationCheck(UUIDContainer eventDescription) {
+        eventDescription.getUuid();
+        return eventsService.registrationCheck(eventDescription)
+                .replaceWith(Response.ok().build());
+    }
+
     @GET
     public Uni<List<Event>> get() {
         return eventsService.listEvents();
@@ -35,7 +44,7 @@ public class EventsApi {
     @GET
     @Path("{id}")
     public Uni<Event> get(String id) {
-        return eventsService.get(id);
+        return eventsService.getEvent(id);
     }
 
     @POST

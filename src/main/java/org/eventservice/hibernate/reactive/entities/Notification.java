@@ -1,6 +1,7 @@
 package org.eventservice.hibernate.reactive.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,12 +9,11 @@ import lombok.NoArgsConstructor;
 import org.eventservice.hibernate.reactive.enums.NotificationStatus;
 import org.eventservice.hibernate.reactive.enums.NotificationType;
 
-import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "notifications")
-@NamedQuery(name = "Notifications.findAll", query = "SELECT n FROM Notification n LEFT JOIN FETCH n.subscription")
+@NamedQuery(name = "Notifications.findAll", query = "SELECT n FROM Notification n LEFT JOIN FETCH n.subscription LEFT JOIN FETCH n.registration")
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,8 +24,10 @@ public class Notification {
     //@GeneratedValue(generator = "notificationsSequence")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @OneToOne(optional = false)
+    @OneToOne(optional = true)
     private Subscription subscription;
+    @OneToOne(optional = true)
+    private Registration registration;
     @Column(length = 50, nullable = false)
     @Enumerated(EnumType.STRING)
     private NotificationType notificationType;

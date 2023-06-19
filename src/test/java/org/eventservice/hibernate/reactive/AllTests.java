@@ -5,9 +5,12 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import jakarta.inject.Inject;
+import org.apache.commons.lang3.StringUtils;
+import org.assertj.core.api.Condition;
 import org.eventservice.hibernate.reactive.common.DateUtils;
 import org.eventservice.hibernate.reactive.entities.*;
 import org.eventservice.hibernate.reactive.enums.EventStatus;
+import org.eventservice.hibernate.reactive.enums.NotificationStatus;
 import org.eventservice.hibernate.reactive.service.EventsService;
 import org.eventservice.hibernate.reactive.service.MailCheckerService;
 import org.eventservice.hibernate.reactive.service.SenderService;
@@ -72,11 +75,56 @@ public class AllTests {
 
         checkSenderServiceWork();
 
+        registrationCheck();
+
+        checkNotifications();
+
         checkIncomingMails();
 
         //todo 1. проверка готовности 2. комменты 3. Корректные нотификации
 
         //checkNotificationsAfterEventModification();
+    }
+
+    private void checkNotifications() {
+
+        await().atMost(10, SECONDS).until(() -> getCheckNotifiactionsResponse().jsonPath().getList("status").contains("SENT"));
+
+        Response response = getCheckNotifiactionsResponse();
+
+        Assertions.assertEquals(2, response.jsonPath().getList("id").size());
+        assertThat(response.jsonPath().getList("status")).containsExactly(NotificationStatus.SENT.toString(), NotificationStatus.SENT.toString());
+
+        Condition<Object> emptyRowCondition = new Condition<>(cs -> StringUtils.isNotEmpty(cs.toString()), "is empty!");
+
+        assertThat(response.jsonPath().getList("registration.name")).areNot(emptyRowCondition);
+        assertThat(response.jsonPath().getList("subscription.name")).areNot(emptyRowCondition);
+    }
+
+    private static Response getCheckNotifiactionsResponse() {
+        Response response = given()
+                .when()
+                .get("/notifications")
+                .then()
+                .statusCode(200)
+                .contentType("application/json")
+                .extract().response();
+        return response;
+    }
+
+    private void registrationCheck() {
+        UUIDContainer eventUUID = UUIDContainer.builder()
+                .uuid(eventUUID1)
+                .build();
+
+        Response response = given()
+                .when()
+                .body(eventUUID)
+                .contentType("application/json")
+                .post("/events/registrationCheck")
+                .then()
+                .statusCode(200)
+                .extract().response();
     }
 
     private void createRegistration() {
@@ -272,6 +320,7 @@ public class AllTests {
 
         Assertions.assertEquals(2, response.jsonPath().getList("id").size());
         assertThat(response.jsonPath().getList("name")).containsExactlyInAnyOrder("Test event 1", "Test event 2");
+        assertThat(response.jsonPath().getList("creator.id")).containsOnly(userUuid);
         assertThat(response.jsonPath().getList("plannedDateTime")).contains(plannedDateTimeAsText);
         // assertThat(response.jsonPath().getList("subscriptions.event.name")).containsExactlyInAnyOrder(plannedDateTimeAsText);
     }
@@ -303,6 +352,7 @@ public class AllTests {
 
         Assertions.assertNotNull(response.jsonPath().get("id"));
         Assertions.assertNotNull(response.jsonPath().get("group.id"));
+        Assertions.assertNotNull(response.jsonPath().get("creator.id"));
         Assertions.assertEquals(false, Boolean.valueOf(response.jsonPath().get("isConfirmedByAdministrator")));
 
         return response.jsonPath().get("id");
@@ -385,7 +435,7 @@ public class AllTests {
     public void checkNotificationsAfterEventModification() {
         String newStatus = "Test event 1 Modified to trigger notification";
 
-        Event eventForModification = eventsService.get(eventUUID1).await().indefinitely();
+        Event eventForModification = eventsService.getEvent(eventUUID1).await().indefinitely();
 
         eventForModification.setName(newStatus);
 

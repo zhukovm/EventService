@@ -13,7 +13,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "events")
-@NamedQuery(name = "Events.findAll", query = "SELECT e FROM Event e LEFT JOIN FETCH e.group"/* LEFT JOIN FETCH e.subscriptions LEFT JOIN FETCH e.registrations LEFT JOIN FETCH e.comments"*/)
+@NamedQuery(name = "Events.findAll", query = "SELECT e FROM Event e LEFT JOIN FETCH e.group LEFT JOIN FETCH e.creator"/* LEFT JOIN FETCH e.subscriptions LEFT JOIN FETCH e.registrations LEFT JOIN FETCH e.comments"*/)
 @Data
 @Builder
 @NoArgsConstructor
@@ -22,7 +22,8 @@ public class Event {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    // @Fetch(value = FetchMode.JOIN)
     private User creator;
     @Column(length = 200, nullable = false)
     private String name;
