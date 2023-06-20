@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "registrations")
-@NamedQuery(name = "Registrations.findAll", query = "SELECT s FROM Registration s LEFT JOIN FETCH s.user LEFT JOIN FETCH s.event")
+@NamedQuery(name = "Registrations.findAll", query = "SELECT r FROM Registration r LEFT JOIN FETCH r.user LEFT JOIN FETCH r.event")
+@NamedQuery(name = "Registrations.findRegistrationByEventAndUser", query = "SELECT r FROM Registration r LEFT JOIN FETCH r.user LEFT JOIN FETCH r.event WHERE r.user.preferredUserName=:preferredUserName AND r.event.id=:eventUuid")
+
 @Data
 @Builder
 @NoArgsConstructor

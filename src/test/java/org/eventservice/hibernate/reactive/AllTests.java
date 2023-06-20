@@ -5,8 +5,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import jakarta.inject.Inject;
-import org.apache.commons.lang3.StringUtils;
-import org.assertj.core.api.Condition;
 import org.eventservice.hibernate.reactive.common.DateUtils;
 import org.eventservice.hibernate.reactive.entities.*;
 import org.eventservice.hibernate.reactive.enums.EventStatus;
@@ -39,6 +37,8 @@ public class AllTests {
     MockMailbox mailbox;
     @Inject
     MailCheckerService mailCheckerService;
+
+    private static final int secsTimeout = 65;
 
     public static String eventUUID1;
     public static String groupUUID1;
@@ -80,16 +80,15 @@ public class AllTests {
 
         checkNotifications();
 
-        checkIncomingMails();
+        checkIncomingMailsWithRegistrationsConfirmed();
 
-        //todo 1. проверка готовности 2. комменты 3. Корректные нотификации
+        //todo 1. проверка готовности-done 2. комменты 3. Корректные нотификации
 
         //checkNotificationsAfterEventModification();
     }
 
     private void checkNotifications() {
-
-        await().atMost(10, SECONDS).until(() ->
+        await().atMost(secsTimeout, SECONDS).until(() ->
                 getCheckNotifiactionsResponse()
                         .jsonPath()
                         .getList("status")
@@ -113,6 +112,17 @@ public class AllTests {
         Response response = given()
                 .when()
                 .get("/notifications")
+                .then()
+                .statusCode(200)
+                .contentType("application/json")
+                .extract().response();
+        return response;
+    }
+
+    private static Response getCheckRegistrationsResponse() {
+        Response response = given()
+                .when()
+                .get("/registrations")
                 .then()
                 .statusCode(200)
                 .contentType("application/json")
@@ -241,13 +251,20 @@ public class AllTests {
         adminUserToken = response.jsonPath().getString("access_token");
     }
 
-    private void checkIncomingMails() throws Exception {
-        mailCheckerService.checkMails();
+    private void checkIncomingMailsWithRegistrationsConfirmed() throws Exception {
+        await().atMost(1500, SECONDS).until(() ->
+                getCheckRegistrationsResponse()
+                        .jsonPath()
+                        .getList("confirmed")
+                        .equals(Arrays.asList(true))
+        );
     }
 
     private void checkSenderServiceWork() {
-        //await().atMost(2, SECONDS).until(() -> senderService.getProcessedMessagedCounter() == 1);
-        await().atMost(10, SECONDS).until(() -> mailbox.getTotalMessagesSent() > 0);
+        if (mailCheckerService.isMockingEnabled()) {
+            //await().atMost(2, SECONDS).until(() -> senderService.getProcessedMessagedCounter() == 1);
+            await().atMost(secsTimeout, SECONDS).until(() -> mailbox.getTotalMessagesSent() > 0);
+        }
     }
 
     public void listAllUsers() {

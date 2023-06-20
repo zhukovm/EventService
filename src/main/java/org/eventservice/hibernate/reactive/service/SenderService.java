@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Getter
 public class SenderService {
+    public static final String MAIL_SUBJECT = "notification from netcracker event system";
     @Inject
     Mutiny.SessionFactory sf;
     @Inject
@@ -30,7 +31,7 @@ public class SenderService {
 
     private int processedMessagedCounter = 0;
 
-    @Scheduled(every = "1s")
+    @Scheduled(every = "30s")
     Uni<Void> processNotifications() {
         log.info("processNotifications started");
 
@@ -50,7 +51,7 @@ public class SenderService {
                                                     }
 
                                                     // return String.format("Sending notification to %s %s about %s, to email %s", u.getFirstName(), u.getLastName(), n.getUserMessage(), u.getEmail());
-                                                    return Mail.withText(u.getEmail(), "Notification from NetCracker Event System", String.format("Dear %s %s (%s), we inform you about %s", u.getFirstName(), u.getLastName(), u.getPreferredUserName(), n.getUserMessage()));
+                                            return Mail.withText(u.getEmail(), MAIL_SUBJECT, String.format("Dear %s %s (%s), we inform you about %s", u.getFirstName(), u.getLastName(), u.getPreferredUserName(), n.getUserMessage()));
                                                 })
                                                 .collect(Collectors.toList())
                                 )
