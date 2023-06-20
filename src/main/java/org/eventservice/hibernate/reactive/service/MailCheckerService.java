@@ -1,6 +1,9 @@
 package org.eventservice.hibernate.reactive.service;
 
+import io.quarkus.mailer.MockMailbox;
 import io.smallrye.config.ConfigMapping;
+import io.vertx.ext.mail.MailMessage;
+import jakarta.inject.Inject;
 import lombok.Data;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -21,8 +24,21 @@ public class MailCheckerService {
     String imapHost;
     @ConfigProperty(name = "quarkus.mailer.imapPort")
     int imapPort;
+    @Inject
+    MockMailbox mailbox;
 
     public void checkMails() throws MessagingException, IOException {
+
+
+        if(mailbox!=null) {
+          mailbox.getMailMessagesSentTo("zhumix@yandex.ru")
+                  .stream().filter(mailMessage -> mailMessage.getText().contains(NotificationsService.REGISTRATION_CHECK_IDENTIFYING_EXPRESSION))
+                  .filter(mailMessage -> mailMessage)
+          ;
+
+        }
+
+
         Session session = Session.getDefaultInstance(new Properties());
         Store store = session.getStore("imaps");
         store.connect(imapHost, imapPort, username, password);

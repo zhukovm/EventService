@@ -31,7 +31,6 @@ public class UsersApi {
     @Path("activeUser")
     public Uni<User> getActiveUser() {
         String preferredUserName = jwt.getClaim("preferred_username");
-
         return sf.withSession(s ->
                         s.createNamedQuery("Users.findByPreferredUserName", User.class)
                                 .setParameter("preferredUserName", preferredUserName)
