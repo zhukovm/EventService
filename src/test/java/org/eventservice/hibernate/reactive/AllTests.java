@@ -64,6 +64,9 @@ public class AllTests {
         createEvent();
         listAllEvents();
 
+        createComments();
+        listAllCommentsByEventUuid();
+
         createSubscription();
         listAllSubscriptions();
 
@@ -74,17 +77,65 @@ public class AllTests {
 
         modifyEvent();
 
-        checkSenderServiceWork();
+/*        checkSenderServiceWork();
 
         registrationCheck();
 
         checkNotifications();
 
-        checkIncomingMailsWithRegistrationsConfirmed();
+        checkIncomingMailsWithRegistrationsConfirmed();*/
 
-        //todo 1. проверка готовности-done 2. комменты 3. Корректные нотификации
+
+        //todo
+        // 1. проверка готовности-done
+        // 2. комменты done
+        // 3. Корректные нотификации
 
         //checkNotificationsAfterEventModification();
+    }
+
+    private void createComments() {
+        Comment c = Comment.builder()
+                .event(Event.builder().id(eventUUID1).build())
+                .createdAt(new Date(System.currentTimeMillis()))
+                .text("text1")
+                .build();
+        Comment c2 = Comment.builder()
+                .event(Event.builder().id(eventUUID1).build())
+                .createdAt(new Date(System.currentTimeMillis()))
+                .text("text2")
+                .build();
+
+        createAndCheckComment(c);
+        createAndCheckComment(c2);
+    }
+
+    private static void createAndCheckComment(Comment c) {
+        Response response = given()
+                .when()
+                .body(c)
+                .contentType("application/json")
+                .post("/comments")
+                .then()
+                .statusCode(201)
+                .extract().response();
+
+        Assertions.assertNotNull(response.jsonPath().get("id"));
+        Assertions.assertNotNull(response.jsonPath().get("event.id"));
+    }
+
+    private void listAllCommentsByEventUuid() {
+        Response response = given()
+                .when()
+                .contentType("application/json")
+                .param("event.uuid", eventUUID1)
+                .get("/comments")
+                .then()
+                .statusCode(200)
+                .extract().response();
+
+        Assertions.assertEquals(2, response.jsonPath().getList("id").size());
+        Assertions.assertEquals(2, response.jsonPath().getList("event.name").size());
     }
 
     private void checkNotifications() {

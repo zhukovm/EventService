@@ -12,6 +12,7 @@ import java.util.Date;
 @Entity
 @Table(name = "Comment")
 @NamedQuery(name = "Comments.findAll", query = "SELECT e FROM Comment e LEFT JOIN FETCH e.event")
+@NamedQuery(name = "Comments.findAllByEventUuid", query = "SELECT e FROM Comment e LEFT JOIN FETCH e.event where e.event.id=:eventUuid")
 @Data
 @Builder
 @NoArgsConstructor

@@ -20,8 +20,6 @@ import java.util.Date;
 @AllArgsConstructor
 public class Notification {
     @Id
-    //@SequenceGenerator(name = "notificationsSequence", sequenceName = "events_id_seq", allocationSize = 1, initialValue = 1)
-    //@GeneratedValue(generator = "notificationsSequence")
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
     @OneToOne(optional = true)
