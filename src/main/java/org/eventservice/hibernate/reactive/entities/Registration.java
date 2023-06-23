@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @Table(name = "registrations")
 @NamedQuery(name = "Registrations.findAll", query = "SELECT r FROM Registration r LEFT JOIN FETCH r.user LEFT JOIN FETCH r.event")
 @NamedQuery(name = "Registrations.findRegistrationByEventAndUser", query = "SELECT r FROM Registration r LEFT JOIN FETCH r.user LEFT JOIN FETCH r.event WHERE r.user.preferredUserName=:preferredUserName AND r.event.id=:eventUuid")
-
 @Data
 @Builder
 @NoArgsConstructor

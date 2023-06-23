@@ -44,6 +44,7 @@ public class AllTests {
     public static String groupUUID1;
     public static String groupTypeUUID1;
     public static String userUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf710";
+    public static String userUuid2;
     //public static String administratorRoleUuid = "10f1a89d-193c-4f9b-b420-55c7d2aaf708";
 
     public String adminUserToken = "";
@@ -67,10 +68,14 @@ public class AllTests {
         createComments();
         listAllCommentsByEventUuid();
 
-        createSubscription();
+        createSubscriptionForEvent();
+        createSubscriptionForGroup();
+        createSubscriptionForGroupType();
+
         listAllSubscriptions();
 
-        createRegistration();
+        createRegistrationWithExistingSubscription();
+        createRegistrationWithoutSubscription();
         listAllRegistrations();
 
         getEvent();
@@ -93,6 +98,9 @@ public class AllTests {
 
         //checkNotificationsAfterEventModification();
     }
+
+
+
 
     private void createComments() {
         Comment c = Comment.builder()
@@ -196,7 +204,15 @@ public class AllTests {
                 .extract().response();
     }
 
-    private void createRegistration() {
+    private void createRegistrationWithExistingSubscription() {
+        createRegistrationAndCheckForUser(userUuid);
+    }
+
+    private void createRegistrationWithoutSubscription() {
+        createRegistrationAndCheckForUser(userUuid2);
+    }
+
+    private static void createRegistrationAndCheckForUser(String userUuid) {
         Event event = new Event();
 
         event.setId(eventUUID1);
@@ -217,7 +233,6 @@ public class AllTests {
                 .extract().response();
 
         Assertions.assertNotNull(response.jsonPath().get("id"));
-
     }
 
     private void listAllRegistrations() {
@@ -231,9 +246,9 @@ public class AllTests {
 
         System.out.println(response.asString());
 
-        Assertions.assertEquals(1, response.jsonPath().getList("id").size());
-        assertThat(response.jsonPath().getList("user.firstName")).containsExactlyInAnyOrder("Mikhail");
-        assertThat(response.jsonPath().getList("event.name")).containsExactlyInAnyOrder("Test event 1");
+        Assertions.assertEquals(2, response.jsonPath().getList("id").size());
+        assertThat(response.jsonPath().getList("user.firstName")).contains("Mikhail");
+        assertThat(response.jsonPath().getList("event.name")).contains("Test event 1");
     }
 
     private void createGroupType() {
@@ -368,6 +383,7 @@ public class AllTests {
 
         Assertions.assertNotNull(response.jsonPath().get("id"));
         Assertions.assertEquals(getBirthDate(), response.jsonPath().get("birthDate"));
+        userUuid2 = response.jsonPath().get("id");
     }
 
     private static String getBirthDate() {
@@ -468,8 +484,7 @@ public class AllTests {
         assertThat(response.jsonPath().get("name").equals(newStatus));
     }
 
-    public void createSubscription() {
-
+    public void createSubscriptionForEvent() {
         Event event = new Event();
 
         event.setId(eventUUID1);
@@ -479,7 +494,10 @@ public class AllTests {
                 .user(User.builder().id(userUuid).build())
                 .build();
 
+        postAndCheckSubscription(s);
+    }
 
+    private static void postAndCheckSubscription(Subscription s) {
         Response response = given()
                 .when()
                 .body(s)
@@ -490,6 +508,30 @@ public class AllTests {
                 .extract().response();
 
         Assertions.assertNotNull(response.jsonPath().get("id"));
+    }
+
+    private void createSubscriptionForGroupType() {
+        GroupType groupType = new GroupType();
+        groupType.setId(groupTypeUUID1);
+
+        Subscription s = Subscription.builder()
+                .groupType(groupType)
+                .user(User.builder().id(userUuid).build())
+                .build();
+
+        postAndCheckSubscription(s);
+    }
+
+    private void createSubscriptionForGroup() {
+        Group group = new Group();
+        group.setId(groupUUID1);
+
+        Subscription s = Subscription.builder()
+                .group(group)
+                .user(User.builder().id(userUuid).build())
+                .build();
+
+        postAndCheckSubscription(s);
     }
 
     public void listAllSubscriptions() {
@@ -503,9 +545,9 @@ public class AllTests {
 
         System.out.println(response.asString());
 
-        Assertions.assertEquals(1, response.jsonPath().getList("id").size());
-        assertThat(response.jsonPath().getList("user.firstName")).containsExactlyInAnyOrder("Mikhail");
-        assertThat(response.jsonPath().getList("event.name")).containsExactlyInAnyOrder("Test event 1");
+        Assertions.assertEquals(3, response.jsonPath().getList("id").size());
+        assertThat(response.jsonPath().getList("user.firstName")).contains("Mikhail");
+        assertThat(response.jsonPath().getList("event.name")).contains("Test event 1");
     }
 
     public void checkNotificationsAfterEventModification() {

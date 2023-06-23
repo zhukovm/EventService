@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "subscriptions")
 @NamedQuery(name = "Subscriptions.findAll", query = "SELECT s FROM Subscription s LEFT JOIN FETCH s.user LEFT JOIN FETCH s.event LEFT JOIN FETCH s.group LEFT JOIN FETCH s.groupType")
+@NamedQuery(name = "Subscriptions.findSubscriptionByEventAndUser", query = "SELECT s FROM Subscription s LEFT JOIN FETCH s.user LEFT JOIN FETCH s.event LEFT JOIN FETCH s.group LEFT JOIN FETCH s.groupType" +
+        " WHERE s.user.id=:userUuid AND s.event.id=:eventUuid")
 @Data
 @Builder
 @NoArgsConstructor

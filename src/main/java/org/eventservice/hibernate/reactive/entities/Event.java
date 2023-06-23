@@ -31,6 +31,8 @@ public class Event {
     private String shortDescription;
     @Column(length = 5000, nullable = false)
     private String description;
+    @Column(length = 1000, nullable = true)
+    private String location;
     @Column(length = 50, nullable = false)
     private EventStatus status;
     @Column
