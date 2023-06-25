@@ -37,8 +37,9 @@ public class EventsService {
 
     public Uni<Void> createEvent(Event event) {
         return sf.withTransaction((s, t) -> s.persist(event)
-                .flatMap(e -> getEvent(event.getId()))
-                .flatMap(e -> notificationsService.generateNotificationsForSubscriptions(event, NotificationType.EVENT_CREATED))
+                .call(() -> s.flush())
+                .call(() -> s.refresh(event))
+                .flatMap(v -> notificationsService.generateNotificationsForSubscriptions(event, NotificationType.EVENT_CREATED))
                 .flatMap(notifications -> s.persistAll(notifications.toArray()))
         );
         /*.replaceWith(sf.withSession(s-> s.refresh(Event.builder().id(event.getId()).build())));*/
@@ -47,6 +48,7 @@ public class EventsService {
     public Uni<Event> modifyEvent(Event event) {
         log.info("[EVENT] modify with " + event);
         return sf.withTransaction((s, t) -> s.merge(event)
+                .call(e -> s.flush())
                 .call(e -> s.refresh(e))
                 .call(e -> notificationsService.generateNotificationsForSubscriptions(e, NotificationType.DESCRIPTION_CHANGED)
                         .flatMap(notifications -> s.persistAll(notifications.toArray()))

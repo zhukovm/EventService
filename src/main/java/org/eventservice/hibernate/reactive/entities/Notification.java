@@ -22,9 +22,9 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
-    @OneToOne(optional = true)
+    @ManyToOne(optional = true)
     private Subscription subscription;
-    @OneToOne(optional = true)
+    @ManyToOne(optional = true)
     private Registration registration;
     @Column(length = 50, nullable = false)
     @Enumerated(EnumType.STRING)

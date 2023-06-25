@@ -62,6 +62,8 @@ public class AllTests {
         createGroupType();
         createGroup();
 
+        createSubscriptionForGroup();
+
         createEvent();
         listAllEvents();
 
@@ -69,7 +71,6 @@ public class AllTests {
         listAllCommentsByEventUuid();
 
         createSubscriptionForEvent();
-        createSubscriptionForGroup();
         createSubscriptionForGroupType();
 
         listAllSubscriptions();
@@ -82,13 +83,13 @@ public class AllTests {
 
         modifyEvent();
 
-/*        checkSenderServiceWork();
+        checkSenderServiceWork();
 
         registrationCheck();
 
         checkNotifications();
 
-        checkIncomingMailsWithRegistrationsConfirmed();*/
+        checkIncomingMailsWithRegistrationsConfirmed();
 
 
         //todo
@@ -247,7 +248,7 @@ public class AllTests {
         System.out.println(response.asString());
 
         Assertions.assertEquals(2, response.jsonPath().getList("id").size());
-        assertThat(response.jsonPath().getList("user.firstName")).contains("Mikhail");
+        assertThat(response.jsonPath().getList("user.firstName")).contains("EventServiceUser");
         assertThat(response.jsonPath().getList("event.name")).contains("Test event 1");
     }
 
@@ -341,7 +342,7 @@ public class AllTests {
                 .statusCode(200)
                 .contentType("application/json")
                 .extract().response();
-        assertThat(response.jsonPath().getList("firstName")).contains("Mikhail");
+        assertThat(response.jsonPath().getList("firstName")).contains("EventServiceUser");
     }
 
     public void getActiveUser() throws ParseException {
@@ -546,7 +547,7 @@ public class AllTests {
         System.out.println(response.asString());
 
         Assertions.assertEquals(3, response.jsonPath().getList("id").size());
-        assertThat(response.jsonPath().getList("user.firstName")).contains("Mikhail");
+        assertThat(response.jsonPath().getList("user.firstName")).contains("EventServiceUser");
         assertThat(response.jsonPath().getList("event.name")).contains("Test event 1");
     }
 

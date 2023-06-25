@@ -6,11 +6,14 @@ import jakarta.inject.Inject;
 import org.eventservice.hibernate.reactive.common.DateUtils;
 import org.eventservice.hibernate.reactive.entities.Event;
 import org.eventservice.hibernate.reactive.entities.Notification;
+import org.eventservice.hibernate.reactive.entities.Subscription;
 import org.eventservice.hibernate.reactive.enums.NotificationStatus;
 import org.eventservice.hibernate.reactive.enums.NotificationType;
 import org.hibernate.reactive.mutiny.Mutiny;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -32,15 +35,37 @@ public class NotificationsService {
 
     public Uni<List<Notification>> generateNotificationsForSubscriptions(Event event, NotificationType notificationType) {
         return eventsService.getEvent(event.getId())
-                .map(e -> e.getSubscriptions().stream().map(s ->
-                        Notification.builder()
-                                .notificationType(notificationType)
-                                .status(NotificationStatus.CREATED)
-                                .subscription(s)
-                                .createdAt(DateUtils.getCurrentUtcDate())
-                                .userMessage(buildNotificationMessage(e, notificationType))
-                                .build()
-                ).collect(Collectors.toList()));
+                .map(e -> {
+                    List<Notification> eventSubscriptionNotifications = generateCreateNotificationsForSubscriptions(notificationType, e, e.getSubscriptions());
+                    List<Notification> eventGroupNotifications = generateCreateNotificationsForSubscriptions(notificationType, e, e.getGroup().getSubscriptions());
+
+                    Set<Notification> result = new HashSet<Notification>(eventSubscriptionNotifications);
+                    result.addAll(eventGroupNotifications);
+
+                    return result.stream().toList();
+                });
+    }
+
+    private List<Notification> generateCreateNotificationsForSubscriptions(NotificationType notificationType, Event e, List<Subscription> subscriptions) {
+        return subscriptions.stream()
+                .map(s -> Notification.builder()
+                        .notificationType(notificationType)
+                        .status(NotificationStatus.CREATED)
+                        .subscription(s)
+                        .createdAt(DateUtils.getCurrentUtcDate())
+                        .userMessage(buildNotificationMessage(e, notificationType))
+                        .build()
+                ).collect(Collectors.toList());
+    }
+
+    private Notification buildCreateEventNotification(NotificationType notificationType, Event e, Subscription s) {
+        return Notification.builder()
+                .notificationType(notificationType)
+                .status(NotificationStatus.CREATED)
+                .subscription(s)
+                .createdAt(DateUtils.getCurrentUtcDate())
+                .userMessage(buildNotificationMessage(e, notificationType))
+                .build();
     }
 
     public Uni<List<Notification>> generateNotificationsForRegistrations(Event event, NotificationType notificationType) {

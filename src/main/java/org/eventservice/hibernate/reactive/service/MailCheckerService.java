@@ -68,7 +68,7 @@ public class MailCheckerService {
 
     private Stream<String> getMessageContentStream() throws MessagingException, IOException {
         if (isMockingEnabled) {
-            return mailbox.getMailMessagesSentTo("zhumix@yandex.ru")
+            return mailbox.getMailMessagesSentTo("EventServiceUser@yandex.ru")
                     .stream().map(mailMessage -> mailMessage.getText());
         } else {
             Session session = Session.getDefaultInstance(new Properties());

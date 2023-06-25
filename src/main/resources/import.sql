@@ -7,4 +7,4 @@ INSERT INTO known_fruits(id, name) VALUES (nextval('known_fruits_id_seq'), 'Bana
 --INSERT INTO roles(id, name) VALUES ('10f1a89d-193c-4f9b-b420-55c7d2aaf709', 'User');
 
 INSERT INTO users(id, birthdate, email, firstname, isemailverified, lastname, preferredUsername, patronymic, phone)
-VALUES ('10f1a89d-193c-4f9b-b420-55c7d2aaf710', '12/06/1989', 'zhumix@yandex.ru', 'Mikhail', false, 'Zhukov', 'zm0519','Sergeevich', '89272126275');
+VALUES ('10f1a89d-193c-4f9b-b420-55c7d2aaf710', '12/01/1990', 'EventServiceUser@yandex.ru', 'EventServiceUser', false, 'Service', 'EventServiceUser','User', '89272126275');
