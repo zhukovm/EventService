@@ -28,6 +28,12 @@ public class RegistrationsApi {
     SubscriptionService subscriptionService;
 
     @GET
+    @Path("{id}")
+    public Uni<Registration> get(String id) {
+        return sf.withTransaction((s, t) -> s.find(Registration.class, id));
+    }
+
+    @GET
     public Uni<List<Registration>> list() {
         return sf.withSession(s -> s
                 .createNamedQuery("Registrations.findAll", Registration.class)
